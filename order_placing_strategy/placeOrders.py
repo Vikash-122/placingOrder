@@ -14,11 +14,15 @@ total_order = config.TOTAL_ORDER  # total shares to buy
 iceberg_visible = config.ICEBERG_VISIBLE  # visible portion per iceberg order
 skip_threshold = config.SKIP_THRESHOLD  # skip if price moves >0.5% against us
 # -----------------------------
-data = {}
-for venue in venues:
+def giveVenueData(venue:str) -> pd.DataFrame:
     prices = np.cumsum(np.random.normal(0, 0.2, num_intervals)) + 100  # start around 100
     volumes = np.random.randint(5000, 20000, num_intervals)
-    data[venue] = pd.DataFrame({'Price': prices, 'Volume': volumes})
+    return pd.DataFrame({'Price': prices, 'Volume': volumes})
+
+# -----------------------------
+data = {}
+for venue in venues:
+    data[venue] = giveVenueData(venue)
 
 # Calculate VWAP for each venue
 for venue in venues:
@@ -80,7 +84,8 @@ for i in range(num_intervals):
     for v, _ in sorted_venues:
         if remaining_chunk <= 0:
             break
-        alloc = min(remaining_chunk, random.randint(1000, 5000))
+        alloc = min(remaining_chunk, random.randint(int(config.CHUNK_MINM*remaining_chunk), \
+                                                    int(config.CHUNK_MAXM*remaining_chunk)))
         venue_allocations[v] += alloc
         executed_orders.append(alloc)
         executed_prices.append(data[v].iloc[i]['Price'])
